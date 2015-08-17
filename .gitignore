@@ -1,0 +1,4 @@
+.directory
+Server/Debug/*
+CommonLib/Debug/*
+Client/Debug/*
