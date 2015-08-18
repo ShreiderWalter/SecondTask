@@ -2,4 +2,4 @@
 #include <tchar.h>
 #include <Windows.h>
 #include <iostream>
-#include "PipeStatic.h"
+#include "SharedMemoryManager.h"

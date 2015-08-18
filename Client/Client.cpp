@@ -12,68 +12,57 @@ int Client::failed_error = -1;
 
 Client::Client()
 {
-	hPipe = OpenFileMapping(FILE_MAP_ALL_ACCESS,
-							TRUE,
-							MAPPING_OBJECT_NAME);
 }
 
 Client::~Client()
 {
-	CloseHandle(hPipe);
 }
 
-void threadProgress(HANDLE hPipe)
+void threadProgress()
 {
+	int previous = 0;
 	while(true)
 	{
+		int color = SharedMemoryManager::read();
+		std::cout << color << "\n";
 
-		HANDLE eventNotify = OpenEvent(EVENT_ALL_ACCESS, false, "Global\\AcceptLock");
-		LPTSTR buffer = (LPTSTR) MapViewOfFile(hPipe, FILE_MAP_ALL_ACCESS, 0, 0, BUFFER_SIZE);
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		SetEvent(eventNotify);
-		CloseHandle(eventNotify);
-
-		//std::cout << buffer << "\n";
-
-		std::string tmp((char *) buffer);
-		std::regex comp("(\\+|-)?[[:digit:]]+");
-		if(std::regex_match(tmp, comp))
+		if(color == previous)
 		{
-			int color = (int)buffer[0];
-			switch(color)
-			{
-			case 49: //1 digital
-				Client::picked_color = Red; break;
-			case 50: //2 digital
-				Client::picked_color = Blue; break;
-			case 51: //3 digital
-				Client::picked_color = Orange; break;
-			case 52: //4 digital
-				Client::picked_color = Green; break;
-			case 53: //5 digital
-				Client::picked_color = Yellow; break;
-			default:
-				Client::failed_error = CONNECTION_CORRUPTED; break;
-			}
+			Client::failed_error = CONNECTION_CORRUPTED;
 		}
-	}
 
+		switch(color)
+		{	
+		case 49: //1 digital
+			Client::picked_color = Red; break;
+		case 50: //2 digital
+			Client::picked_color = Blue; break;
+		case 51: //3 digital
+			Client::picked_color = Orange; break;
+		case 52: //4 digital
+			Client::picked_color = Green; break;
+		case 53: //5 digital
+			Client::picked_color = Yellow; break;
+		default:
+			Client::failed_error = CONNECTION_CORRUPTED; break;
+		}
+		previous = color;
+	}
 }
 
 void Client::run()
 {
-	if(hPipe == nullptr)
+	if(!SharedMemoryManager::connect(MAPPING_OBJECT_NAME))
 	{
 		failed_error = CONNECTION_FAILED;
-		return;
 	}
-
-	HANDLE eventNotify = OpenEvent(EVENT_ALL_ACCESS, false, "Global\\SendLock");
-	SetEvent(eventNotify);
-	CloseHandle(eventNotify);
+	else
+	{
+		SharedMemoryManager::read();
 	
-	std::thread thread(threadProgress, hPipe);
-	thread.detach();
+		std::thread thread(threadProgress);
+		thread.detach();
+	}
 }
 
 HWND Client::BCX_Form(char * Caption, int X, int Y, int W, int H, int Style, int Exstyle)

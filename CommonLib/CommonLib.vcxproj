@@ -20,7 +20,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v110</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -77,9 +77,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PipeStatic.h" />
+    <ClInclude Include="SharedMemoryManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PipeStatic.cpp" />
+    <ClCompile Include="SharedMemoryManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

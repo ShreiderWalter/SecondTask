@@ -28,9 +28,7 @@
 
 class Client
 {
-private:
-	HANDLE hPipe;
-	
+private:	
 	static HWND BCX_Form(char*, int = 0, int = 0, int = 250, int = 150, int = 0, int = 0);
 
 public:

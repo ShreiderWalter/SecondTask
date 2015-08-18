@@ -3,4 +3,4 @@
 #include <Windows.h>
 #include <iostream>
 #include <regex>
-#include "PipeStatic.h"
+#include "SharedMemoryManager.h"
