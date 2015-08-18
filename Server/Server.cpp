@@ -2,15 +2,15 @@
 
 Server::Server()
 {
-	SharedMemoryManager::create(MAPPING_OBJECT_NAME);
+	manager = SharedMemoryManager::create(MAPPING_OBJECT_NAME).get();
 }
 
 Server::~Server()
 {
-	SharedMemoryManager::close();
+	manager->close();
 }
 
-void threadProgress()
+void threadProgress(SharedMemoryManager * manager)
 { 
 	std::cout << "Thread started ... \n";
 	int prev_color = 0;
@@ -27,8 +27,8 @@ void threadProgress()
 		prev_color = color;
 		std::cout << buf << "\n";
 
-		SharedMemoryManager::write(buf.c_str());
-		SharedMemoryManager::wait();
+		manager->write(buf.c_str());
+		manager->wait();
 		
 	}
 }
@@ -36,11 +36,11 @@ void threadProgress()
 void Server::run()
 {
 	char * tmp = "Hello";
-	SharedMemoryManager::write(tmp);
-	SharedMemoryManager::wait();
+	manager->write(tmp);
+	manager->wait();
 
-	std::thread thread(threadProgress);
-	thread.detach();
+	std::thread thread(threadProgress, manager);
+	thread.join();
 
 }
 

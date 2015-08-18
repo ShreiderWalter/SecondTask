@@ -11,23 +11,26 @@ class SharedMemoryManager
 {
 private:
 	SharedMemoryManager();
-	static HANDLE sharedMemory;
-	static HANDLE eventLock;
-	static HANDLE eventWrite;
-	static LPTSTR buffer;
-	static HANDLE mutex;
+	SharedMemoryManager(std::string name);
+	HANDLE sharedMemory;
+	HANDLE eventLock;
+	HANDLE eventWrite;
+	LPTSTR buffer;
+	HANDLE mutex;
+	static std::shared_ptr<SharedMemoryManager> self;
 
 	static void InitializeSecurityAttributesForEverybodyAccess(SECURITY_ATTRIBUTES * pSecurityAttributes, 
 		SECURITY_DESCRIPTOR * pSecurityDescriptor);
 
 public:
-	static void create(std::string name);
-	static HANDLE connect(std::string name);
-	static void close();
+	static std::shared_ptr<SharedMemoryManager> create(std::string name);
+	static std::shared_ptr<SharedMemoryManager> connect(std::string name);
+	void close();
 
-	static int read();
-	static void write(const char * tmp);
-	static void wait();
+	int read();
+	void write(const char * tmp);
+	void wait();
+	bool isEmpty() const;
 };
 
 

@@ -1,11 +1,12 @@
 #include <string>
 #include <algorithm>
+#include <memory>
 
 namespace PipeLine
 {
 	#define PIPE_NAME TEXT("\\\\.\\pipe\\Pipe")
 	#define BUFFER_SIZE 1024
-	#define MAPPING_OBJECT_NAME TEXT("Global\\MyMappingObject")
+	#define MAPPING_OBJECT_NAME TEXT("MyMappingObject")
 	#define EVENT_NAME TEXT("Global\\AcceptLock")
 	#define EVENT_WRITE_NAME TEXT("Global\\WriteLock")
 	#define MUTEX_NAME TEXT("Global\\MutexLock")

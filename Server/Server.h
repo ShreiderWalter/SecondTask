@@ -13,6 +13,7 @@
 class Server
 {
 private:
+	SharedMemoryManager * manager;
 
 public:
 	Server();

@@ -12,24 +12,20 @@ int Client::failed_error = -1;
 
 Client::Client()
 {
+	manager = SharedMemoryManager::connect(MAPPING_OBJECT_NAME).get();
 }
 
 Client::~Client()
 {
 }
 
-void threadProgress()
+void threadProgress(SharedMemoryManager * manager)
 {
 	int previous = 0;
 	while(true)
 	{
-		int color = SharedMemoryManager::read();
+		int color = manager->read();
 		std::cout << color << "\n";
-
-		if(color == previous)
-		{
-			Client::failed_error = CONNECTION_CORRUPTED;
-		}
 
 		switch(color)
 		{	
@@ -52,15 +48,15 @@ void threadProgress()
 
 void Client::run()
 {
-	if(!SharedMemoryManager::connect(MAPPING_OBJECT_NAME))
+	if(manager->isEmpty())
 	{
 		failed_error = CONNECTION_FAILED;
 	}
 	else
 	{
-		SharedMemoryManager::read();
+		manager->read();
 	
-		std::thread thread(threadProgress);
+		std::thread thread(threadProgress, manager);
 		thread.detach();
 	}
 }

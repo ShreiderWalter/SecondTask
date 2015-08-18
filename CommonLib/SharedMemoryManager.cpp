@@ -1,27 +1,14 @@
 #include "SharedMemoryManager.h"
 
-HANDLE SharedMemoryManager::sharedMemory = nullptr;
-HANDLE SharedMemoryManager::eventLock = nullptr;
-HANDLE SharedMemoryManager::eventWrite = nullptr;
-LPTSTR SharedMemoryManager::buffer = nullptr;
-HANDLE SharedMemoryManager::mutex = nullptr;
+std::shared_ptr<SharedMemoryManager> SharedMemoryManager::self;
 
-void SharedMemoryManager::InitializeSecurityAttributesForEverybodyAccess(SECURITY_ATTRIBUTES * pSecurityAttributes, 
-		SECURITY_DESCRIPTOR * pSecurityDescriptor)
+SharedMemoryManager::SharedMemoryManager()
 {
-	memset(pSecurityAttributes, NULL, sizeof(SECURITY_ATTRIBUTES));
-	pSecurityAttributes->bInheritHandle = true;
-	pSecurityAttributes->lpSecurityDescriptor = pSecurityDescriptor;
-	pSecurityAttributes->nLength = sizeof(SECURITY_ATTRIBUTES);
-	InitializeSecurityDescriptor(pSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
-	SetSecurityDescriptorDacl(pSecurityDescriptor, true, nullptr, false);
 }
 
-void SharedMemoryManager::create(std::string name) 
+SharedMemoryManager::SharedMemoryManager(std::string name)
 {
 	SECURITY_DESCRIPTOR sd;
-	InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
-
 	SECURITY_ATTRIBUTES sa;
 	InitializeSecurityAttributesForEverybodyAccess(&sa, &sd);
 
@@ -40,25 +27,49 @@ void SharedMemoryManager::create(std::string name)
 	buffer = (LPTSTR) MapViewOfFile(sharedMemory, FILE_MAP_ALL_ACCESS, 0, 0, BUFFER_SIZE);
 
 	mutex = CreateMutex(nullptr, FALSE, MUTEX_NAME);
+}
 
+void SharedMemoryManager::InitializeSecurityAttributesForEverybodyAccess(SECURITY_ATTRIBUTES * pSecurityAttributes, 
+		SECURITY_DESCRIPTOR * pSecurityDescriptor)
+{
+	memset(pSecurityAttributes, NULL, sizeof(SECURITY_ATTRIBUTES));
+	pSecurityAttributes->bInheritHandle = true;
+	pSecurityAttributes->lpSecurityDescriptor = pSecurityDescriptor;
+	pSecurityAttributes->nLength = sizeof(SECURITY_ATTRIBUTES);
+	InitializeSecurityDescriptor(pSecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+	SetSecurityDescriptorDacl(pSecurityDescriptor, true, nullptr, false);
+
+}
+
+std::shared_ptr<SharedMemoryManager> SharedMemoryManager::create(std::string name) 
+{
+	self = std::shared_ptr<SharedMemoryManager>(new SharedMemoryManager(name));
+	return self;
+}
+
+std::shared_ptr<SharedMemoryManager> SharedMemoryManager::connect(std::string name)
+{
+	self = std::shared_ptr<SharedMemoryManager>(new SharedMemoryManager);
+	self->sharedMemory = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, name.c_str());
+	self->eventLock = OpenEvent(EVENT_ALL_ACCESS, false, EVENT_NAME);
+	self->eventWrite = OpenEvent(EVENT_ALL_ACCESS, false, EVENT_WRITE_NAME);
+	self->buffer = (LPSTR) MapViewOfFile(self->sharedMemory, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, BUFFER_SIZE);
+	std::cout << GetLastError();
+	self->mutex = OpenMutex(FILE_MAP_READ | FILE_MAP_WRITE, false, MUTEX_NAME);
+
+	SetEvent(self->eventLock);
+
+	return self;
+}
+
+bool SharedMemoryManager::isEmpty() const
+{
+	return nullptr == sharedMemory;
 }
 
 void SharedMemoryManager::close()
 {
 	CloseHandle(sharedMemory);
-}
-
-HANDLE SharedMemoryManager::connect(std::string name)
-{
-	sharedMemory = OpenFileMapping(FILE_MAP_ALL_ACCESS, TRUE, name.c_str());
-	eventLock = OpenEvent(EVENT_ALL_ACCESS, FALSE, EVENT_NAME);
-	eventWrite = OpenEvent(EVENT_ALL_ACCESS, FALSE, EVENT_WRITE_NAME);
-	buffer = (LPTSTR) MapViewOfFile(sharedMemory, FILE_MAP_ALL_ACCESS, 0, 0, BUFFER_SIZE);
-	mutex = OpenMutex(FILE_MAP_ALL_ACCESS, FALSE, MUTEX_NAME);
-
-	SetEvent(eventLock);
-
-	return sharedMemory;
 }
 
 void SharedMemoryManager::write(const char * tmp)
