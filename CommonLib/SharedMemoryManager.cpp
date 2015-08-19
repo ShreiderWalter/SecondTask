@@ -41,13 +41,13 @@ void SharedMemoryManager::InitializeSecurityAttributesForEverybodyAccess(SECURIT
 
 }
 
-std::shared_ptr<SharedMemoryManager> SharedMemoryManager::create(std::string name) 
+std::shared_ptr<SharedMemoryManager> SharedMemoryManager::create(const std::string &name) 
 {
 	self = std::shared_ptr<SharedMemoryManager>(new SharedMemoryManager(name));
 	return self;
 }
 
-std::shared_ptr<SharedMemoryManager> SharedMemoryManager::connect(std::string name)
+std::shared_ptr<SharedMemoryManager> SharedMemoryManager::connect(const std::string &name)
 {
 	self = std::shared_ptr<SharedMemoryManager>(new SharedMemoryManager);
 	self->sharedMemory = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, name.c_str());
@@ -74,10 +74,9 @@ void SharedMemoryManager::close()
 
 void SharedMemoryManager::write(const char * tmp)
 {
-	//CopyMemory((PVOID)buffer, msg.c_str(), (_tcslen(msg.c_str()) * sizeof(TCHAR)));
-	//SetEvent(eventLock);
-
+	WaitForSingleObject(mutex, INFINITE);
 	CopyMemory((PVOID)buffer, tmp, (_tcslen(tmp)) * sizeof(TCHAR));
+	ReleaseMutex(mutex);
 	SetEvent(eventLock);
 }
 

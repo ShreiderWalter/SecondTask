@@ -23,8 +23,8 @@ private:
 		SECURITY_DESCRIPTOR * pSecurityDescriptor);
 
 public:
-	static std::shared_ptr<SharedMemoryManager> create(std::string name);
-	static std::shared_ptr<SharedMemoryManager> connect(std::string name);
+	static std::shared_ptr<SharedMemoryManager> create(const std::string &name);
+	static std::shared_ptr<SharedMemoryManager> connect(const std::string &name);
 	void close();
 
 	int read();
